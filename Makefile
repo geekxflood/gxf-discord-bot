@@ -29,6 +29,11 @@ test: ## Run tests
 	@echo "Running tests..."
 	go test -v ./...
 
+test-watch: ## Run tests in watch mode (requires entr)
+	@echo "Running tests in watch mode..."
+	@which entr > /dev/null || (echo "Install entr: brew install entr" && exit 1)
+	find . -name "*.go" | entr -c go test -v ./...
+
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
 	go test -v -race ./...
