@@ -28,9 +28,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
-          args: --timeout=5m
-          skip-pkg-cache: false
-          skip-build-cache: false
+          args: --timeout=5m --disable=typecheck
 
   test:
     name: Test

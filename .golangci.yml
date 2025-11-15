@@ -12,8 +12,6 @@ linters:
     - misspell
     - revive
     - gosec
-  disable:
-    - typecheck  # Disabled: redundant with go test, causes false positives in CI
 
 linters-settings:
   errcheck:
