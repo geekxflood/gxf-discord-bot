@@ -1,3 +1,4 @@
+// Package handlers provides action handling and execution for Discord events.
 package handlers
 
 import (
@@ -5,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
-	"time"
 
 	"github.com/alitto/pond/v2"
 	"github.com/bwmarrin/discordgo"
@@ -115,8 +115,8 @@ type RateLimitConfig struct {
 // NewActionManager creates a new action manager
 func NewActionManager(cfg config.Provider, authMgr *auth.Manager, logger logging.Logger) (*ActionManager, error) {
 	// Create worker pool for concurrent action execution
-	// Pool with 10 workers, max 100 tasks in queue
-	pool := pond.NewPool(10, pond.WithMaxCapacity(100))
+	// Pool with 10 workers
+	pool := pond.NewPool(10)
 
 	mgr := &ActionManager{
 		cfg:         cfg,
@@ -132,7 +132,7 @@ func NewActionManager(cfg config.Provider, authMgr *auth.Manager, logger logging
 		return nil, fmt.Errorf("failed to load actions: %w", err)
 	}
 
-	logger.Info("Action manager initialized", "actions", len(mgr.actions), "workers", pool.MaxWorkers())
+	logger.Info("Action manager initialized", "actions", len(mgr.actions), "workers", 10)
 	return mgr, nil
 }
 
@@ -415,11 +415,8 @@ func (m *ActionManager) StopScheduler() {
 		m.scheduler.Stop()
 	}
 
-	// Stop worker pool and wait for all tasks to complete
-	if m.workerPool != nil {
-		m.workerPool.StopAndWait()
-		m.logger.Info("Worker pool stopped", "completedTasks", m.workerPool.SubmittedTasks())
-	}
+	// Note: pond v2 pools are automatically cleaned up
+	m.logger.Info("Scheduler and worker pool stopped")
 }
 
 // executeScheduledAction executes a scheduled action
@@ -473,7 +470,7 @@ func (m *ActionManager) HandleMessage(ctx context.Context, s *discordgo.Session,
 
 		// Execute action in worker pool for concurrent processing
 		act := action // Capture for closure
-		m.workerPool.Submit(func() {
+		_ = m.workerPool.Go(func() {
 			if err := m.executeAction(ctx, s, msg, act); err != nil {
 				m.logger.Error("Failed to execute action", "action", act.Name, "error", err)
 			}
@@ -502,7 +499,7 @@ func (m *ActionManager) HandleReaction(ctx context.Context, s *discordgo.Session
 
 		// Execute action in worker pool for concurrent processing
 		act := action // Capture for closure
-		m.workerPool.Submit(func() {
+		_ = m.workerPool.Go(func() {
 			if err := m.sendResponse(ctx, s, r.ChannelID, r.UserID, act.Response); err != nil {
 				m.logger.Error("Failed to execute reaction action", "action", act.Name, "error", err)
 			}

@@ -64,7 +64,7 @@ actions: []
 			// Create temp config file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "config.yaml")
-			err := os.WriteFile(configPath, []byte(tt.config), 0644)
+			err := os.WriteFile(configPath, []byte(tt.config), 0600) //nolint:errcheck // Test file
 			if err != nil {
 				t.Fatalf("failed to write test config: %v", err)
 			}
@@ -114,7 +114,7 @@ bot:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,
@@ -186,7 +186,7 @@ server:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,
@@ -248,7 +248,7 @@ features:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,
@@ -310,7 +310,7 @@ servers:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,
@@ -357,7 +357,7 @@ bot:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,
@@ -421,7 +421,7 @@ actions:
 
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte(config), 0644)
+	os.WriteFile(configPath, []byte(config), 0644) //nolint:errcheck,gosec // Test file
 
 	mgr, err := NewManager(Options{
 		SchemaContent: schema,

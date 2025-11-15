@@ -1,3 +1,4 @@
+// Package cmd provides CLI commands for the GXF Discord Bot.
 package cmd
 
 import (
@@ -26,7 +27,7 @@ func init() {
 	generateCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite existing file")
 }
 
-func generateConfig(cmd *cobra.Command, args []string) error {
+func generateConfig(_ *cobra.Command, _ []string) error {
 	// Check if file exists
 	if !force {
 		if _, err := os.Stat(outputFile); err == nil {
@@ -195,7 +196,7 @@ actions:
       content: "Good morning! Don't forget to check your tasks for today! ☀️"
 `
 
-	if err := os.WriteFile(outputFile, []byte(sampleConfig), 0644); err != nil {
+	if err := os.WriteFile(outputFile, []byte(sampleConfig), 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

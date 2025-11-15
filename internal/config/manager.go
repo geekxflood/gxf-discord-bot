@@ -1,3 +1,4 @@
+// Package config provides configuration management with CUE schema validation.
 package config
 
 import (
@@ -7,8 +8,8 @@ import (
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
-	"cuelang.org/go/encoding/yaml"
 	"github.com/geekxflood/common/logging"
+	"gopkg.in/yaml.v3"
 )
 
 // Provider defines the interface for accessing configuration

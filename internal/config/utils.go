@@ -13,7 +13,20 @@ func getNestedValue(data map[string]interface{}, key string) (interface{}, bool)
 	current := interface{}(data)
 
 	for _, part := range parts {
-		// Handle array index
+		// First handle map key
+		if part.key != "" {
+			m, ok := current.(map[string]interface{})
+			if !ok {
+				return nil, false
+			}
+
+			current, ok = m[part.key]
+			if !ok {
+				return nil, false
+			}
+		}
+
+		// Then handle array index if present
 		if idx, isArray := part.arrayIndex(); isArray {
 			slice, ok := current.([]interface{})
 			if !ok {
@@ -23,18 +36,6 @@ func getNestedValue(data map[string]interface{}, key string) (interface{}, bool)
 				return nil, false
 			}
 			current = slice[idx]
-			continue
-		}
-
-		// Handle map key
-		m, ok := current.(map[string]interface{})
-		if !ok {
-			return nil, false
-		}
-
-		current, ok = m[part.key]
-		if !ok {
-			return nil, false
 		}
 	}
 

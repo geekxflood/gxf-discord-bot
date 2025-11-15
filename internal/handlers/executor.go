@@ -50,7 +50,7 @@ func (m *ActionManager) checkConditions(ctx context.Context, s *discordgo.Sessio
 		if !m.authMgr.IsAuthenticated(msg.Author.ID) {
 			// Send auth URL
 			authURL := m.authMgr.GetAuthURL(msg.Author.ID)
-			s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("This command requires authentication. Please authenticate here: %s", authURL))
+			_, _ = s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("This command requires authentication. Please authenticate here: %s", authURL))
 			return false
 		}
 	}
@@ -66,7 +66,7 @@ func (m *ActionManager) checkConditions(ctx context.Context, s *discordgo.Sessio
 }
 
 // checkCondition checks a single condition
-func (m *ActionManager) checkCondition(ctx context.Context, s *discordgo.Session, msg *discordgo.MessageCreate, condition *Condition) bool {
+func (m *ActionManager) checkCondition(_ context.Context, s *discordgo.Session, msg *discordgo.MessageCreate, condition *Condition) bool {
 	switch condition.Type {
 	case "channel":
 		return m.compareValue(msg.ChannelID, condition.Value, condition.Operator)
@@ -158,7 +158,7 @@ func (m *ActionManager) executeAction(ctx context.Context, s *discordgo.Session,
 	// Delete trigger message if configured
 	if action.Response.DeleteAfter > 0 {
 		time.AfterFunc(time.Duration(action.Response.DeleteAfter)*time.Second, func() {
-			s.ChannelMessageDelete(msg.ChannelID, msg.ID)
+			_ = s.ChannelMessageDelete(msg.ChannelID, msg.ID)
 		})
 	}
 
@@ -287,7 +287,7 @@ func (m *ActionManager) sendHTTPRequest(ctx context.Context, cfg *HTTPConfig) er
 	if err != nil {
 		return fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("HTTP request failed with status: %d", resp.StatusCode)
@@ -316,7 +316,7 @@ func (m *ActionManager) sendWebhook(ctx context.Context, webhookURL, content str
 	if err != nil {
 		return fmt.Errorf("webhook request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("webhook request failed with status: %d", resp.StatusCode)

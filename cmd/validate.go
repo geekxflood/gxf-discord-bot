@@ -21,7 +21,7 @@ func init() {
 	rootCmd.AddCommand(validateCmd)
 }
 
-func validateConfig(cmd *cobra.Command, args []string) error {
+func validateConfig(_ *cobra.Command, _ []string) error {
 	fmt.Printf("Validating configuration file: %s\n", cfgFile)
 
 	// Create config manager

@@ -1,3 +1,4 @@
+// Package auth provides OAuth authentication and session management for the bot.
 package auth
 
 import (
@@ -104,7 +105,7 @@ func (m *Manager) initOAuthConfig(ctx context.Context) error {
 	}
 
 	// Get OAuth endpoints
-	endpoint := oauth2.Endpoint{}
+	var endpoint oauth2.Endpoint
 
 	switch provider {
 	case "discord":
@@ -168,8 +169,9 @@ func (m *Manager) startCallbackServer() error {
 	mux.HandleFunc("/health", m.handleHealth)
 
 	m.server = &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", host, port),
-		Handler: mux,
+		Addr:              fmt.Sprintf("%s:%d", host, port),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
@@ -224,13 +226,13 @@ func (m *Manager) handleCallback(w http.ResponseWriter, r *http.Request) {
 	m.logger.Info("User authenticated", "userId", session.UserID, "username", session.Username, "state", state)
 
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "<html><body><h1>Authentication Successful!</h1><p>You can close this window and return to Discord.</p></body></html>")
+	_, _ = fmt.Fprintf(w, "<html><body><h1>Authentication Successful!</h1><p>You can close this window and return to Discord.</p></body></html>")
 }
 
 // handleHealth handles health check endpoint
-func (m *Manager) handleHealth(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "OK")
+	_, _ = fmt.Fprintf(w, "OK")
 }
 
 // getUserInfo retrieves user information from the OAuth provider
@@ -255,7 +257,7 @@ func (m *Manager) getUserInfo(ctx context.Context, token *oauth2.Token) (map[str
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {

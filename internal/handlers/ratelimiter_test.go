@@ -108,7 +108,7 @@ func TestRateLimiter_ConcurrentAccess(t *testing.T) {
 
 	wg.Wait()
 
-	if allowedCount != int32(maxRequests) {
+	if int(allowedCount) != maxRequests { //nolint:gosec // Test with known small values
 		t.Errorf("Expected %d requests allowed, got %d", maxRequests, allowedCount)
 	}
 }
