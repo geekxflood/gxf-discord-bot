@@ -11,6 +11,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/oauth2 v0.30.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -43,5 +44,4 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
