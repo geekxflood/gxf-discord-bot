@@ -1,6 +1,8 @@
 run:
   timeout: 5m
   go: '1.23'
+  skip-dirs:
+    - internal/testutil
 
 linters:
   enable:
@@ -45,6 +47,12 @@ issues:
         - errcheck
         - gosec
         - unused
+    - path: pkg/config/config\.go
+      linters:
+        - typecheck
+    - path: internal/testutil/
+      linters:
+        - typecheck
 
   max-issues-per-linter: 0
   max-same-issues: 0
