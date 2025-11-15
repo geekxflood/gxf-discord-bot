@@ -29,6 +29,8 @@ jobs:
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
           args: --timeout=5m
+          skip-pkg-cache: false
+          skip-build-cache: false
 
   test:
     name: Test
