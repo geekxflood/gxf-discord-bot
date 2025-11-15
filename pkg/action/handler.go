@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/geekxflood/common/logging"
 	"github.com/geekxflood/gxf-discord-bot/pkg/config"
+	"github.com/geekxflood/gxf-discord-bot/pkg/response"
 )
 
 // Manager manages all bot actions
@@ -88,24 +89,49 @@ func NewManager(cfg *config.Config, logger logging.Logger) (*Manager, error) {
 }
 
 // HandleMessage handles incoming messages
-func (m *Manager) HandleMessage(ctx context.Context, session *discordgo.Session, message *discordgo.MessageCreate) error {
+func (m *Manager) HandleMessage(ctx context.Context, session response.DiscordSession, message *discordgo.MessageCreate) error {
 	for _, action := range m.actions {
 		if action.Handler.Matches(message.Content) {
 			m.logger.Debug("Action matched", "action", action.Config.Name, "content", message.Content)
-			// TODO: Execute action handler
+
+			// Execute response
+			if err := response.Execute(ctx, session, message.Message, action.Config.Response, m.logger); err != nil {
+				m.logger.Error("Failed to execute response", "action", action.Config.Name, "error", err)
+				return fmt.Errorf("failed to execute response for action %s: %w", action.Config.Name, err)
+			}
+
 			return nil
 		}
 	}
 	return nil
 }
 
+// DiscordSessionExtended extends response.DiscordSession with additional methods
+type DiscordSessionExtended interface {
+	response.DiscordSession
+	ChannelMessage(channelID, messageID string, options ...discordgo.RequestOption) (*discordgo.Message, error)
+}
+
 // HandleReaction handles reaction events
-func (m *Manager) HandleReaction(ctx context.Context, session *discordgo.Session, reaction *discordgo.MessageReactionAdd) error {
+func (m *Manager) HandleReaction(ctx context.Context, session DiscordSessionExtended, reaction *discordgo.MessageReactionAdd) error {
 	emojiName := reaction.Emoji.Name
 	for _, action := range m.actions {
 		if action.Config.Type == "reaction" && action.Handler.Matches(emojiName) {
 			m.logger.Debug("Reaction action matched", "action", action.Config.Name, "emoji", emojiName)
-			// TODO: Execute action handler
+
+			// Get the original message to send response
+			msg, err := session.ChannelMessage(reaction.ChannelID, reaction.MessageID)
+			if err != nil {
+				m.logger.Error("Failed to get message", "error", err)
+				return fmt.Errorf("failed to get message: %w", err)
+			}
+
+			// Execute response
+			if err := response.Execute(ctx, session, msg, action.Config.Response, m.logger); err != nil {
+				m.logger.Error("Failed to execute response", "action", action.Config.Name, "error", err)
+				return fmt.Errorf("failed to execute response for action %s: %w", action.Config.Name, err)
+			}
+
 			return nil
 		}
 	}

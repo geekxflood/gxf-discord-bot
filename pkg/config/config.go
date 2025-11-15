@@ -47,9 +47,10 @@ type TriggerConfig struct {
 
 // ResponseConfig defines how the bot responds
 type ResponseConfig struct {
-	Type    string      `yaml:"type"`
-	Content string      `yaml:"content,omitempty"`
-	Embed   *EmbedConfig `yaml:"embed,omitempty"`
+	Type     string       `yaml:"type"`
+	Content  string       `yaml:"content,omitempty"`
+	Embed    *EmbedConfig `yaml:"embed,omitempty"`
+	Reaction string       `yaml:"reaction,omitempty"`
 }
 
 // EmbedConfig represents a Discord embed

@@ -43,6 +43,48 @@ func (m *MockDiscordSession) UpdateStatusComplex(data discordgo.UpdateStatusData
 	return args.Error(0)
 }
 
+// ChannelMessageSend mocks sending a message to a channel
+func (m *MockDiscordSession) ChannelMessageSend(channelID, content string, options ...discordgo.RequestOption) (*discordgo.Message, error) {
+	args := m.Called(channelID, content)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*discordgo.Message), args.Error(1)
+}
+
+// ChannelMessageSendEmbed mocks sending an embed to a channel
+func (m *MockDiscordSession) ChannelMessageSendEmbed(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error) {
+	args := m.Called(channelID, embed)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*discordgo.Message), args.Error(1)
+}
+
+// UserChannelCreate mocks creating a DM channel with a user
+func (m *MockDiscordSession) UserChannelCreate(userID string, options ...discordgo.RequestOption) (*discordgo.Channel, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*discordgo.Channel), args.Error(1)
+}
+
+// MessageReactionAdd mocks adding a reaction to a message
+func (m *MockDiscordSession) MessageReactionAdd(channelID, messageID, emojiID string, options ...discordgo.RequestOption) error {
+	args := m.Called(channelID, messageID, emojiID)
+	return args.Error(0)
+}
+
+// ChannelMessage mocks retrieving a message from a channel
+func (m *MockDiscordSession) ChannelMessage(channelID, messageID string, options ...discordgo.RequestOption) (*discordgo.Message, error) {
+	args := m.Called(channelID, messageID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*discordgo.Message), args.Error(1)
+}
+
 // MockLogger is a mock implementation of logging.Logger
 type MockLogger struct {
 	mock.Mock

@@ -293,9 +293,13 @@ func TestManager_HandleMessage(t *testing.T) {
 	mgr, err := action.NewManager(cfg, logger)
 	require.NoError(t, err)
 
+	session := &testutil.MockDiscordSession{}
+	session.On("ChannelMessageSend", "channel123", "Pong!").Return(&discordgo.Message{}, nil)
+
 	message := &discordgo.MessageCreate{
 		Message: &discordgo.Message{
-			Content: "!ping",
+			Content:   "!ping",
+			ChannelID: "channel123",
 			Author: &discordgo.User{
 				ID:       "123",
 				Username: "testuser",
@@ -305,9 +309,10 @@ func TestManager_HandleMessage(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = mgr.HandleMessage(ctx, nil, message)
+	err = mgr.HandleMessage(ctx, session, message)
 
 	assert.NoError(t, err)
+	session.AssertExpectations(t)
 }
 
 func TestManager_HandleMessage_NoMatch(t *testing.T) {
@@ -337,9 +342,13 @@ func TestManager_HandleMessage_NoMatch(t *testing.T) {
 	mgr, err := action.NewManager(cfg, logger)
 	require.NoError(t, err)
 
+	session := &testutil.MockDiscordSession{}
+	// No expectations - message won't match
+
 	message := &discordgo.MessageCreate{
 		Message: &discordgo.Message{
-			Content: "hello",
+			Content:   "hello",
+			ChannelID: "channel123",
 			Author: &discordgo.User{
 				ID:       "123",
 				Username: "testuser",
@@ -349,7 +358,7 @@ func TestManager_HandleMessage_NoMatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = mgr.HandleMessage(ctx, nil, message)
+	err = mgr.HandleMessage(ctx, session, message)
 
 	assert.NoError(t, err)
 }
