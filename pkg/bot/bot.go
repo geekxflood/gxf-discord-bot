@@ -5,21 +5,26 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/geekxflood/common/logging"
 	"github.com/geekxflood/gxf-discord-bot/pkg/action"
 	"github.com/geekxflood/gxf-discord-bot/pkg/config"
+	"github.com/geekxflood/gxf-discord-bot/pkg/ratelimit"
+	"github.com/geekxflood/gxf-discord-bot/pkg/scheduler"
 )
 
 // Bot represents the Discord bot instance
 type Bot struct {
-	session   *discordgo.Session
-	cfg       *config.Config
-	logger    logging.Logger
-	actionMgr *action.Manager
-	running   bool
-	runningM  sync.RWMutex
+	session    *discordgo.Session
+	cfg        *config.Config
+	logger     logging.Logger
+	actionMgr  *action.Manager
+	scheduler  *scheduler.Scheduler
+	rateLimiter *ratelimit.Limiter
+	running    bool
+	runningM   sync.RWMutex
 }
 
 // New creates a new Discord bot instance
@@ -55,12 +60,20 @@ func New(ctx context.Context, cfg *config.Config, logger logging.Logger) (*Bot, 
 		return nil, fmt.Errorf("failed to create action manager: %w", err)
 	}
 
+	// Initialize optional scheduler
+	sched := scheduler.New(logger)
+
+	// Initialize optional rate limiter
+	limiter := ratelimit.New(logger)
+
 	bot := &Bot{
-		session:   session,
-		cfg:       cfg,
-		logger:    logger,
-		actionMgr: actionMgr,
-		running:   false,
+		session:     session,
+		cfg:         cfg,
+		logger:      logger,
+		actionMgr:   actionMgr,
+		scheduler:   sched,
+		rateLimiter: limiter,
+		running:     false,
 	}
 
 	// Register event handlers
@@ -159,6 +172,21 @@ func (b *Bot) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to open Discord session: %w", err)
 	}
 
+	// Start scheduler if configured
+	if b.scheduler != nil {
+		if err := b.scheduler.Start(); err != nil {
+			b.logger.Error("Failed to start scheduler", "error", err)
+		}
+	}
+
+	// Start rate limiter cleanup if configured
+	if b.rateLimiter != nil {
+		// Run cleanup every 5 minutes
+		if err := b.rateLimiter.StartCleanup(5 * time.Minute); err != nil {
+			b.logger.Error("Failed to start rate limiter cleanup", "error", err)
+		}
+	}
+
 	b.running = true
 	b.logger.Info("Discord bot started successfully")
 
@@ -176,6 +204,18 @@ func (b *Bot) Stop() error {
 	}
 
 	b.logger.Info("Stopping Discord bot")
+
+	// Stop scheduler if running
+	if b.scheduler != nil && b.scheduler.IsRunning() {
+		if err := b.scheduler.Stop(); err != nil {
+			b.logger.Error("Error stopping scheduler", "error", err)
+		}
+	}
+
+	// Stop rate limiter cleanup
+	if b.rateLimiter != nil {
+		b.rateLimiter.StopCleanup()
+	}
 
 	if b.session != nil {
 		if err := b.session.Close(); err != nil {
@@ -200,4 +240,14 @@ func (b *Bot) IsRunning() bool {
 // GetConfig returns the bot's configuration
 func (b *Bot) GetConfig() *config.Config {
 	return b.cfg
+}
+
+// GetScheduler returns the bot's scheduler
+func (b *Bot) GetScheduler() *scheduler.Scheduler {
+	return b.scheduler
+}
+
+// GetRateLimiter returns the bot's rate limiter
+func (b *Bot) GetRateLimiter() *ratelimit.Limiter {
+	return b.rateLimiter
 }
