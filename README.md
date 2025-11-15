@@ -1,20 +1,99 @@
 # GXF Discord Bot
 
-A highly configurable Discord bot designed for Kubernetes deployments with enterprise-grade features including Vault/OpenBao secret management and OAuth-based authentication.
+A highly configurable Discord bot built with Test-Driven Development (TDD) methodology, featuring comprehensive action handling, scheduling, and rate limiting capabilities.
 
-## Features
+## 🌟 Features
 
-- **YAML-based Configuration** - Define bot behavior declaratively with CUE schema validation
-- **Multiple Action Types** - Commands, pattern matching, reactions, scheduled tasks, HTTP webhooks
-- **Secret Management** - Integrated support for HashiCorp Vault and OpenBao
-- **OAuth Authentication** - Support for Discord, Google, GitHub, and custom OAuth providers
-- **Rate Limiting** - Per-user, per-channel, per-guild, or global rate limits
-- **Kubernetes Ready** - Designed for cloud-native deployments with health checks and graceful shutdown
-- **Cobra CLI** - Generate, validate, and run commands for easy management
+### Core Functionality
+- ✅ **YAML-based Configuration** - Define bot behavior declaratively
+- ✅ **Command Handling** - Prefix-based commands with argument extraction
+- ✅ **Pattern Matching** - Regex-based message matching
+- ✅ **Reaction Handling** - Respond to emoji reactions
+- ✅ **Scheduled Tasks** - Cron-based job scheduling
+- ✅ **Rate Limiting** - Per-user, per-channel, per-guild, and global limits
+- ✅ **Multiple Response Types** - Text, embeds, DMs, and reactions
+
+### Response Types
+- **Text** - Simple message responses
+- **Embed** - Rich embedded messages with fields, colors, and timestamps
+- **DM** - Direct messages to users
+- **Reaction** - Emoji reactions on messages
+
+### Advanced Features
+- **Job Scheduling** - Cron-based scheduled tasks with @daily, @hourly, @weekly descriptors
+- **Token Bucket Rate Limiting** - Fair rate limiting with automatic cleanup
+- **Thread-Safe Operations** - Concurrent-safe action and response handling
+- **Graceful Shutdown** - Proper cleanup of all resources
+
+### Development
+- 🧪 **80%+ Test Coverage** - Built with TDD methodology
+- 📦 **Clean Architecture** - Separated packages for maintainability
+- 🔧 **Extensible Design** - Easy to add new action types and responses
+- 📝 **Well Documented** - Comprehensive examples and godoc comments
+
+## 📦 Project Structure
+
+```
+gxf-discord-bot/
+├── pkg/                      # Public packages
+│   ├── config/              # Configuration management (95.5% coverage)
+│   ├── bot/                 # Discord bot core (52.2% coverage)
+│   ├── action/              # Action handlers (66.7% coverage)
+│   ├── response/            # Response execution (83.0% coverage)
+│   ├── scheduler/           # Job scheduling (97.1% coverage)
+│   └── ratelimit/           # Rate limiting (87.9% coverage)
+├── cmd/                     # CLI commands
+├── internal/testutil/       # Test utilities and mocks
+├── examples/                # Example configurations
+│   ├── basic/              # Simple bot example
+│   └── full-featured/      # Comprehensive example
+└── test/                    # Integration tests
+```
+
+### Package Overview
+
+- **config**: YAML configuration loading and validation
+- **bot**: Core bot lifecycle and Discord session management
+- **action**: Command, message pattern, and reaction handlers
+- **response**: Text, embed, DM, and reaction responses
+- **scheduler**: Cron-based job scheduling with second precision
+- **ratelimit**: Token bucket rate limiting for users, channels, guilds, and global
+
+## 🧪 Testing
+
+The project is built with Test-Driven Development (TDD):
+
+- **64 tests** across 6 packages (81 including subtests)
+- **80.5% weighted test coverage**
+- All core functionality covered by unit tests
+- Mock-based testing for Discord interactions
+- Time-based tests for scheduler and rate limiter
+
+Run tests:
+
+```bash
+make test              # Run all tests
+make test-coverage     # Generate coverage report
+make test-watch        # Watch mode for TDD
+```
 
 ## Quick Start
 
-### 1. Generate Configuration
+### 1. Installation
+
+```bash
+go install github.com/geekxflood/gxf-discord-bot@latest
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/geekxflood/gxf-discord-bot
+cd gxf-discord-bot
+make build
+```
+
+### 2. Generate Configuration
 
 ```bash
 gxf-discord-bot generate --output config.yaml
