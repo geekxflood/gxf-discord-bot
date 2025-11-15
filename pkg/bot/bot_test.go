@@ -27,7 +27,7 @@ func TestNew_Success(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx := context.Background()
 	b, err := bot.New(ctx, cfg, logger)
@@ -45,7 +45,7 @@ func TestNew_InvalidToken(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx := context.Background()
 	b, err := bot.New(ctx, cfg, logger)
@@ -67,7 +67,7 @@ func TestNew_InvalidConfig(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx := context.Background()
 	b, err := bot.New(ctx, cfg, logger)
@@ -88,7 +88,7 @@ func TestStart_Success(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 	logger.On("Info", "Starting Discord bot", mock.Anything).Return()
 	logger.On("Info", "Discord bot started successfully", mock.Anything).Return()
 
@@ -116,7 +116,7 @@ func TestStop_Success(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 	logger.On("Info", "Stopping Discord bot", mock.Anything).Return()
 	logger.On("Info", "Discord bot stopped", mock.Anything).Return()
 
@@ -140,7 +140,7 @@ func TestBot_HandlesContext(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -163,7 +163,7 @@ func TestBot_GetConfig(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx := context.Background()
 	b, err := bot.New(ctx, cfg, logger)
@@ -186,7 +186,7 @@ func TestBot_IsRunning(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 
 	ctx := context.Background()
 	b, err := bot.New(ctx, cfg, logger)
@@ -208,7 +208,7 @@ func TestBot_MultipleStops(t *testing.T) {
 	}
 
 	logger := &testutil.MockLogger{}
-	logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+	logger.On("Info", mock.Anything, mock.Anything).Return()
 	logger.On("Info", "Stopping Discord bot", mock.Anything).Return()
 	logger.On("Info", "Discord bot stopped", mock.Anything).Return()
 
@@ -263,7 +263,7 @@ func TestBot_ConfigValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := &testutil.MockLogger{}
-			logger.On("Info", "Initializing Discord bot", mock.Anything).Return()
+			logger.On("Info", mock.Anything, mock.Anything).Return().Maybe()
 
 			ctx := context.Background()
 			b, err := bot.New(ctx, tt.cfg, logger)

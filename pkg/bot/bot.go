@@ -8,16 +8,18 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/geekxflood/common/logging"
+	"github.com/geekxflood/gxf-discord-bot/pkg/action"
 	"github.com/geekxflood/gxf-discord-bot/pkg/config"
 )
 
 // Bot represents the Discord bot instance
 type Bot struct {
-	session  *discordgo.Session
-	cfg      *config.Config
-	logger   logging.Logger
-	running  bool
-	runningM sync.RWMutex
+	session   *discordgo.Session
+	cfg       *config.Config
+	logger    logging.Logger
+	actionMgr *action.Manager
+	running   bool
+	runningM  sync.RWMutex
 }
 
 // New creates a new Discord bot instance
@@ -47,11 +49,18 @@ func New(ctx context.Context, cfg *config.Config, logger logging.Logger) (*Bot, 
 		discordgo.IntentsDirectMessages |
 		discordgo.IntentsMessageContent
 
+	// Initialize action manager
+	actionMgr, err := action.NewManager(cfg, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create action manager: %w", err)
+	}
+
 	bot := &Bot{
-		session: session,
-		cfg:     cfg,
-		logger:  logger,
-		running: false,
+		session:   session,
+		cfg:       cfg,
+		logger:    logger,
+		actionMgr: actionMgr,
+		running:   false,
 	}
 
 	// Register event handlers
@@ -116,8 +125,10 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
-	// TODO: Handle messages with action manager
-	b.logger.Debug("Message received", "author", m.Author.Username, "content", m.Content)
+	ctx := context.Background()
+	if err := b.actionMgr.HandleMessage(ctx, s, m); err != nil {
+		b.logger.Error("Failed to handle message", "error", err)
+	}
 }
 
 // handleMessageReactionAdd handles reaction add events
@@ -127,8 +138,10 @@ func (b *Bot) handleMessageReactionAdd(s *discordgo.Session, r *discordgo.Messag
 		return
 	}
 
-	// TODO: Handle reactions with action manager
-	b.logger.Debug("Reaction added", "emoji", r.Emoji.Name)
+	ctx := context.Background()
+	if err := b.actionMgr.HandleReaction(ctx, s, r); err != nil {
+		b.logger.Error("Failed to handle reaction", "error", err)
+	}
 }
 
 // Start starts the Discord bot
