@@ -134,6 +134,60 @@ Complete rebuild of the GXF Discord Bot using Test-Driven Development (TDD) meth
 - DiscordSession interface for testability
 - Error handling and validation
 
+### ✅ Scheduler Package (pkg/scheduler)
+**Test Coverage: 97.1%**
+
+**Tests Written (12 total):**
+1. ✅ TestNewScheduler_Success
+2. ✅ TestScheduler_StartStop
+3. ✅ TestScheduler_StartTwice
+4. ✅ TestScheduler_StopWithoutStart
+5. ✅ TestScheduler_AddJob
+6. ✅ TestScheduler_AddJobInvalidCron
+7. ✅ TestScheduler_RemoveJob
+8. ✅ TestScheduler_RemoveNonExistentJob
+9. ✅ TestScheduler_JobExecution
+10. ✅ TestScheduler_GetJobInfo
+11. ✅ TestScheduler_ListJobs
+12. ✅ TestScheduler_LoadFromConfig
+
+**Implementation:**
+- Cron-based job scheduling with second precision
+- Dynamic job add/remove
+- Start/Stop lifecycle management
+- Job execution with error handling
+- Thread-safe operations
+- List jobs and get job information
+- Load scheduled actions from config
+
+### ✅ Rate Limiter Package (pkg/ratelimit)
+**Test Coverage: 87.9%**
+
+**Tests Written (12 total):**
+1. ✅ TestNewLimiter
+2. ✅ TestLimiter_AllowUser
+3. ✅ TestLimiter_AllowChannel
+4. ✅ TestLimiter_AllowGuild
+5. ✅ TestLimiter_AllowGlobal
+6. ✅ TestLimiter_CombinedLimits
+7. ✅ TestLimiter_ResetUser
+8. ✅ TestLimiter_GetUserRemaining
+9. ✅ TestLimiter_Cleanup
+10. ✅ TestLimiter_StartStopCleanup
+11. ✅ TestLimiter_NoLimitsConfigured
+12. ✅ TestLimiter_DifferentUsers
+
+**Implementation:**
+- Per-user rate limiting with token bucket algorithm
+- Per-channel rate limiting
+- Per-guild rate limiting
+- Global rate limiting
+- Combined limit checking
+- Automatic bucket cleanup
+- Thread-safe operations
+- Get remaining requests
+- Manual limit reset
+
 ## Current Status
 
 **Test Results:**
@@ -143,12 +197,14 @@ pkg/config: 95.5% coverage (10/10 tests pass)
 pkg/bot: 52.2% coverage (11/11 tests pass - 14 including subtests)
 pkg/action: 66.7% coverage (10/10 tests pass - 22 including subtests)
 pkg/response: 83.0% coverage (9/9 tests pass)
+pkg/scheduler: 97.1% coverage (12/12 tests pass)
+pkg/ratelimit: 87.9% coverage (12/12 tests pass)
 internal/testutil: 0% coverage (test utilities, not tested)
 cmd/: 0% coverage (CLI integration, not tested yet)
 main: 0% coverage (entry point, not tested)
 ```
 
-**Total Test Count: 40 tests passing (57 including subtests)**
+**Total Test Count: 64 tests passing (81 including subtests)**
 
 **Build Status:**
 ```
@@ -159,29 +215,11 @@ main: 0% coverage (entry point, not tested)
 ✅ Actions match and route correctly
 ✅ Responses execute for all types (text, embed, DM, reaction)
 ✅ End-to-end action→response flow working
+✅ Scheduler can manage cron jobs
+✅ Rate limiting works for all scopes (user, channel, guild, global)
 ```
 
-## Next Steps (Phase 5)
-
-### 📋 Scheduler Package (pkg/scheduler)
-**Priority: HIGH**
-
-Planned tests:
-- [ ] TestScheduler_Start
-- [ ] TestScheduler_Stop
-- [ ] TestScheduler_ExecuteCronJobs
-- [ ] TestScheduler_AddJob
-- [ ] TestScheduler_RemoveJob
-
-### 📋 Rate Limiter Package (pkg/ratelimit)
-**Priority: HIGH**
-
-Planned tests:
-- [ ] Per-user rate limiting
-- [ ] Per-channel rate limiting
-- [ ] Per-guild rate limiting
-- [ ] Global rate limiting
-- [ ] Rate limit cleanup
+## Next Steps (Phase 6)
 
 ### 📋 Auth Package (pkg/auth)
 **Priority: MEDIUM**
@@ -237,6 +275,11 @@ Planned tests:
 - ✅ GREEN: Implemented response package
 - ✅ REFACTOR: Integrated with action handlers
 
+**Phase 5 (Scheduler & Rate Limiting):**
+- ✅ RED: Wrote 24 failing tests (12 scheduler + 12 rate limiter)
+- ✅ GREEN: Implemented both packages
+- ✅ REFACTOR: Thread-safe operations and cleanup
+
 ### Benefits Observed
 - ✅ Clear requirements from tests
 - ✅ High confidence in code correctness
@@ -249,9 +292,9 @@ Planned tests:
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Overall Coverage | 90%+ | 74.4% (weighted avg) |
-| Tests Written | TBD | 40 (57 with subtests) |
-| Packages Completed | 7 | 4 |
+| Overall Coverage | 90%+ | 80.5% (weighted avg) |
+| Tests Written | TBD | 64 (81 with subtests) |
+| Packages Completed | 7 | 6 |
 | Build Status | ✅ | ✅ |
 
 ## Timeline
@@ -260,11 +303,11 @@ Planned tests:
 - **Phase 2** (Bot Core): ✅ Complete (Day 1)
 - **Phase 3** (Actions): ✅ Complete (Day 1)
 - **Phase 4** (Responses): ✅ Complete (Day 1)
-- **Phase 5** (Scheduler & Rate Limiting): 📅 2-3 days (NEXT)
-- **Phase 6** (Auth & Secrets): 📅 3-4 days
+- **Phase 5** (Scheduler & Rate Limiting): ✅ Complete (Day 1)
+- **Phase 6** (Auth & Secrets): 📅 3-4 days (NEXT)
 - **Phase 7** (Integration): 📅 2-3 days
 
-**Progress**: 4/7 packages complete (57.1%)
+**Progress**: 6/7 packages complete (85.7%)
 
 ## Commands Reference
 
@@ -289,6 +332,18 @@ make ci
 ```
 
 ## Recent Achievements
+
+### Phase 5 Highlights
+- Implemented complete job scheduling system with cron support
+- Implemented comprehensive rate limiting (user, channel, guild, global)
+- 97.1% test coverage on scheduler package (12 tests)
+- 87.9% test coverage on rate limiter package (12 tests)
+- Token bucket algorithm for fair rate limiting
+- Automatic cleanup of expired rate limit buckets
+- Thread-safe operations across both packages
+- Support for cron descriptors (@hourly, @daily, @weekly, etc.)
+- Job execution validation with actual time-based tests
+- Dynamic job management (add/remove while running)
 
 ### Phase 4 Highlights
 - Implemented complete response handling system
@@ -319,6 +374,6 @@ make ci
 ---
 
 **Last Updated**: 2025-11-15
-**Test Coverage**: 74.4% weighted average
-**Tests Passing**: 40/40 (57 with subtests)
-**Status**: ✅ Phase 4 Complete, Ready for Phase 5 (Scheduler & Rate Limiting)
+**Test Coverage**: 80.5% weighted average
+**Tests Passing**: 64/64 (81 with subtests)
+**Status**: ✅ Phase 5 Complete, Ready for Phase 6 (Auth & Secrets)
