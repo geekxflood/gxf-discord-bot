@@ -302,12 +302,15 @@ func (l *Limiter) StartCleanup(interval time.Duration) error {
 	l.cleanupStop = make(chan struct{})
 	ticker := time.NewTicker(interval)
 
+	// Store local copy of cleanupStop to avoid race
+	stopChan := l.cleanupStop
+
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
 				l.Cleanup()
-			case <-l.cleanupStop:
+			case <-stopChan:
 				ticker.Stop()
 				return
 			}
@@ -321,11 +324,14 @@ func (l *Limiter) StartCleanup(interval time.Duration) error {
 // StopCleanup stops automatic cleanup
 func (l *Limiter) StopCleanup() {
 	l.cleanupMu.Lock()
-	defer l.cleanupMu.Unlock()
+	stopChan := l.cleanupStop
+	l.cleanupStop = nil
+	l.cleanupMu.Unlock()
 
-	if l.cleanupStop != nil {
-		close(l.cleanupStop)
-		l.cleanupStop = nil
+	if stopChan != nil {
+		close(stopChan)
+		// Give goroutine time to exit
+		time.Sleep(10 * time.Millisecond)
 		l.logger.Info("Rate limit cleanup stopped")
 	}
 }

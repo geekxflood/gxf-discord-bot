@@ -2,6 +2,7 @@ package scheduler_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -167,9 +168,12 @@ func TestScheduler_JobExecution(t *testing.T) {
 	require.NoError(t, err)
 	defer sched.Stop()
 
+	var executedMu sync.Mutex
 	executed := false
 	job := func(ctx context.Context) error {
+		executedMu.Lock()
 		executed = true
+		executedMu.Unlock()
 		return nil
 	}
 
@@ -180,7 +184,10 @@ func TestScheduler_JobExecution(t *testing.T) {
 	// Wait for job to execute
 	time.Sleep(1500 * time.Millisecond)
 
-	assert.True(t, executed, "Job should have been executed")
+	executedMu.Lock()
+	wasExecuted := executed
+	executedMu.Unlock()
+	assert.True(t, wasExecuted, "Job should have been executed")
 }
 
 func TestScheduler_GetJobInfo(t *testing.T) {
