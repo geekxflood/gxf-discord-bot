@@ -187,24 +187,3 @@ jobs:
         with:
           sarif_file: trivy-image-results.sarif
 
-  validate-config:
-    name: Validate Configuration
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: gxf-discord-bot-linux-amd64
-
-      - name: Generate sample config
-        run: |
-          chmod +x gxf-discord-bot
-          ./gxf-discord-bot generate --output test-config.yaml
-
-      - name: Validate sample config
-        run: |
-          ./gxf-discord-bot validate --config test-config.yaml

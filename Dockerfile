@@ -29,9 +29,6 @@ WORKDIR /app
 # Copy the binary from builder
 COPY --from=builder /app/bot .
 
-# Copy example config (will be overridden by ConfigMap in k8s)
-COPY --from=builder /app/config.yaml.example ./config.yaml.example
-
 # Create a non-root user
 RUN addgroup -g 1000 botuser && \
     adduser -D -u 1000 -G botuser botuser && \
