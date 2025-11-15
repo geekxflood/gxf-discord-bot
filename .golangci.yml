@@ -1,8 +1,8 @@
 run:
   timeout: 5m
   go: '1.23'
-  skip-dirs:
-    - internal/testutil
+  skip-files:
+    - internal/testutil/.*
 
 linters:
   enable:
