@@ -12,6 +12,8 @@ linters:
     - misspell
     - revive
     - gosec
+  disable:
+    - typecheck
 
 linters-settings:
   errcheck:

@@ -28,7 +28,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
-          args: --timeout=5m --disable typecheck
+          args: --timeout=5m
 
   test:
     name: Test
