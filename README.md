@@ -5,6 +5,7 @@ A highly configurable Discord bot built with Test-Driven Development (TDD) metho
 ## 🌟 Features
 
 ### Core Functionality
+
 - ✅ **YAML-based Configuration** - Define bot behavior declaratively
 - ✅ **Command Handling** - Prefix-based commands with argument extraction
 - ✅ **Pattern Matching** - Regex-based message matching
@@ -14,18 +15,21 @@ A highly configurable Discord bot built with Test-Driven Development (TDD) metho
 - ✅ **Multiple Response Types** - Text, embeds, DMs, and reactions
 
 ### Response Types
+
 - **Text** - Simple message responses
 - **Embed** - Rich embedded messages with fields, colors, and timestamps
 - **DM** - Direct messages to users
 - **Reaction** - Emoji reactions on messages
 
 ### Advanced Features
+
 - **Job Scheduling** - Cron-based scheduled tasks with @daily, @hourly, @weekly descriptors
 - **Token Bucket Rate Limiting** - Fair rate limiting with automatic cleanup
 - **Thread-Safe Operations** - Concurrent-safe action and response handling
 - **Graceful Shutdown** - Proper cleanup of all resources
 
 ### Development
+
 - 🧪 **80%+ Test Coverage** - Built with TDD methodology
 - 📦 **Clean Architecture** - Separated packages for maintainability
 - 🔧 **Extensible Design** - Easy to add new action types and responses
