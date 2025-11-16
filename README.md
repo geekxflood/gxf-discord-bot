@@ -644,7 +644,7 @@ This project includes a comprehensive CI/CD pipeline with:
 - **Container Publishing** - Multi-platform Docker images to GHCR
 - **Security Alerts** - SARIF results uploaded to GitHub Security tab
 
-See [CI_CD.md](CI_CD.md) for detailed documentation.
+For detailed CI/CD and deployment documentation, see the [GXF K8s Chart Wiki](https://github.com/geekxflood/gxf-k8s-chart/wiki).
 
 ### CI Badges
 
