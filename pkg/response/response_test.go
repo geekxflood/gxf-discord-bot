@@ -254,5 +254,5 @@ func TestExecuteEmbedResponse_NilEmbed(t *testing.T) {
 	err := response.Execute(ctx, session, message, cfg, logger)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "embed config is nil")
+	assert.Contains(t, err.Error(), "embed response requires non-nil embed config")
 }

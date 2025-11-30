@@ -138,6 +138,21 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
+	// Check rate limits if limiter is configured
+	if b.rateLimiter != nil {
+		userID := m.Author.ID
+		channelID := m.ChannelID
+		guildID := m.GuildID
+
+		if !b.rateLimiter.Allow(userID, channelID, guildID) {
+			b.logger.Debug("Rate limit exceeded, ignoring message",
+				"userID", userID,
+				"channelID", channelID,
+				"guildID", guildID)
+			return
+		}
+	}
+
 	ctx := context.Background()
 	if err := b.actionMgr.HandleMessage(ctx, s, m); err != nil {
 		b.logger.Error("Failed to handle message", "error", err)
@@ -149,6 +164,21 @@ func (b *Bot) handleMessageReactionAdd(s *discordgo.Session, r *discordgo.Messag
 	// Ignore reactions from bots
 	if r.Member != nil && r.Member.User.Bot {
 		return
+	}
+
+	// Check rate limits if limiter is configured
+	if b.rateLimiter != nil {
+		userID := r.UserID
+		channelID := r.ChannelID
+		guildID := r.GuildID
+
+		if !b.rateLimiter.Allow(userID, channelID, guildID) {
+			b.logger.Debug("Rate limit exceeded, ignoring reaction",
+				"userID", userID,
+				"channelID", channelID,
+				"guildID", guildID)
+			return
+		}
 	}
 
 	ctx := context.Background()

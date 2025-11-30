@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -157,6 +158,115 @@ func (c *Config) Validate() error {
 	// Ensure at least one token source is configured
 	if c.Bot.Token == "" && c.Bot.TokenEnvVar == "" && c.Bot.TokenVaultPath == "" {
 		return fmt.Errorf("no token source configured (token, tokenEnvVar, or tokenVaultPath required)")
+	}
+
+	// Validate actions
+	if err := c.validateActions(); err != nil {
+		return fmt.Errorf("invalid action configuration: %w", err)
+	}
+
+	return nil
+}
+
+// validateActions validates all action configurations
+func (c *Config) validateActions() error {
+	actionNames := make(map[string]bool)
+
+	for i, action := range c.Actions {
+		// Check for duplicate names
+		if action.Name == "" {
+			return fmt.Errorf("action[%d]: name is required", i)
+		}
+		if actionNames[action.Name] {
+			return fmt.Errorf("action[%d]: duplicate action name '%s'", i, action.Name)
+		}
+		actionNames[action.Name] = true
+
+		// Validate action type
+		validTypes := map[string]bool{
+			"command":   true,
+			"message":   true,
+			"reaction":  true,
+			"scheduled": true,
+		}
+		if !validTypes[action.Type] {
+			return fmt.Errorf("action '%s': invalid type '%s' (must be command, message, reaction, or scheduled)", action.Name, action.Type)
+		}
+
+		// Validate trigger based on type
+		if err := validateTrigger(action); err != nil {
+			return fmt.Errorf("action '%s': %w", action.Name, err)
+		}
+
+		// Validate response
+		if err := validateResponse(action); err != nil {
+			return fmt.Errorf("action '%s': %w", action.Name, err)
+		}
+	}
+
+	return nil
+}
+
+// validateTrigger validates the trigger configuration for an action
+func validateTrigger(action ActionConfig) error {
+	switch action.Type {
+	case "command":
+		if action.Trigger.Command == "" {
+			return fmt.Errorf("command trigger requires 'command' field")
+		}
+	case "message":
+		if action.Trigger.Pattern == "" {
+			return fmt.Errorf("message trigger requires 'pattern' field")
+		}
+		// Validate regex pattern
+		if _, err := regexp.Compile(action.Trigger.Pattern); err != nil {
+			return fmt.Errorf("invalid regex pattern '%s': %w", action.Trigger.Pattern, err)
+		}
+	case "reaction":
+		if action.Trigger.Emoji == "" {
+			return fmt.Errorf("reaction trigger requires 'emoji' field")
+		}
+	case "scheduled":
+		if action.Trigger.Schedule == "" {
+			return fmt.Errorf("scheduled trigger requires 'schedule' field")
+		}
+		if len(action.Trigger.Channels) == 0 {
+			return fmt.Errorf("scheduled trigger requires at least one channel")
+		}
+	}
+	return nil
+}
+
+// validateResponse validates the response configuration for an action
+func validateResponse(action ActionConfig) error {
+	validResponseTypes := map[string]bool{
+		"text":     true,
+		"embed":    true,
+		"dm":       true,
+		"reaction": true,
+	}
+
+	if !validResponseTypes[action.Response.Type] {
+		return fmt.Errorf("invalid response type '%s' (must be text, embed, dm, or reaction)", action.Response.Type)
+	}
+
+	switch action.Response.Type {
+	case "text":
+		if action.Response.Content == "" {
+			return fmt.Errorf("text response requires 'content' field")
+		}
+	case "embed":
+		if action.Response.Embed == nil {
+			return fmt.Errorf("embed response requires 'embed' configuration")
+		}
+	case "dm":
+		if action.Response.Content == "" && action.Response.Embed == nil {
+			return fmt.Errorf("dm response requires either 'content' or 'embed' field")
+		}
+	case "reaction":
+		if action.Response.Reaction == "" {
+			return fmt.Errorf("reaction response requires 'reaction' field")
+		}
 	}
 
 	return nil

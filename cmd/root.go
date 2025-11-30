@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/geekxflood/common/logging"
+	"github.com/geekxflood/gxf-discord-bot/pkg/bot"
 	"github.com/geekxflood/gxf-discord-bot/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -65,21 +66,34 @@ func runBot(cmd *cobra.Command, args []string) error {
 
 	logger.Info("Configuration loaded and validated")
 
-	// TODO: Initialize and start bot
-	logger.Info("Bot initialization not yet implemented (TDD in progress)")
-
 	// Setup signal handling for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_ = ctx // Will be used when bot is implemented
-
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Initialize bot
+	discordBot, err := bot.New(ctx, cfg, logger)
+	if err != nil {
+		return fmt.Errorf("failed to initialize bot: %w", err)
+	}
+
+	// Start bot
+	if err := discordBot.Start(ctx); err != nil {
+		return fmt.Errorf("failed to start bot: %w", err)
+	}
+
+	logger.Info("Bot started, waiting for shutdown signal...")
 
 	// Wait for shutdown signal
 	<-sigChan
 	logger.Info("Shutdown signal received, stopping bot...")
+
+	// Stop bot gracefully
+	if err := discordBot.Stop(); err != nil {
+		logger.Error("Error stopping bot", "error", err)
+	}
 
 	return nil
 }

@@ -11,6 +11,13 @@ import (
 	"github.com/geekxflood/gxf-discord-bot/pkg/config"
 )
 
+const (
+	// MaxMessageLength is the maximum length of a Discord message
+	MaxMessageLength = 2000
+	// DefaultTimeout is the default timeout for Discord API calls
+	DefaultTimeout = 10 * time.Second
+)
+
 // DiscordSession defines the interface for Discord session methods we need
 type DiscordSession interface {
 	ChannelMessageSend(channelID, content string, options ...discordgo.RequestOption) (*discordgo.Message, error)
@@ -21,26 +28,63 @@ type DiscordSession interface {
 
 // Execute executes a response based on the configuration
 func Execute(ctx context.Context, session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig, logger logging.Logger) error {
-	logger.Debug("Executing response", "type", cfg.Type)
+	// Validate inputs
+	if session == nil {
+		return fmt.Errorf("session is nil")
+	}
+	if message == nil {
+		return fmt.Errorf("message is nil")
+	}
+	if message.ChannelID == "" {
+		return fmt.Errorf("message channel ID is empty")
+	}
+
+	// Add timeout to context if not already set
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, DefaultTimeout)
+		defer cancel()
+	}
+
+	logger.Debug("Executing response", "type", cfg.Type, "channelID", message.ChannelID)
+
+	// Check context before executing
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context cancelled before execution: %w", ctx.Err())
+	default:
+	}
 
 	switch cfg.Type {
 	case "text":
-		return executeTextResponse(session, message, cfg)
+		return executeTextResponse(ctx, session, message, cfg)
 	case "embed":
-		return executeEmbedResponse(session, message, cfg)
+		return executeEmbedResponse(ctx, session, message, cfg)
 	case "dm":
-		return executeDMResponse(session, message, cfg)
+		return executeDMResponse(ctx, session, message, cfg)
 	case "reaction":
-		return executeReactionResponse(session, message, cfg)
+		return executeReactionResponse(ctx, session, message, cfg)
 	default:
 		return fmt.Errorf("unsupported response type: %s", cfg.Type)
 	}
 }
 
 // executeTextResponse sends a text message to the channel
-func executeTextResponse(session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
+func executeTextResponse(ctx context.Context, session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
 	if cfg.Content == "" {
 		return fmt.Errorf("text response requires non-empty content")
+	}
+
+	// Validate message length
+	if len(cfg.Content) > MaxMessageLength {
+		return fmt.Errorf("message content exceeds maximum length of %d characters (got %d)", MaxMessageLength, len(cfg.Content))
+	}
+
+	// Check context before API call
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	default:
 	}
 
 	_, err := session.ChannelMessageSend(message.ChannelID, cfg.Content)
@@ -52,9 +96,16 @@ func executeTextResponse(session DiscordSession, message *discordgo.Message, cfg
 }
 
 // executeEmbedResponse sends an embed message to the channel
-func executeEmbedResponse(session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
+func executeEmbedResponse(ctx context.Context, session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
 	if cfg.Embed == nil {
-		return fmt.Errorf("embed response requires non-nil embed config is nil")
+		return fmt.Errorf("embed response requires non-nil embed config")
+	}
+
+	// Check context before API call
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	default:
 	}
 
 	embed := BuildEmbed(cfg.Embed)
@@ -68,11 +119,31 @@ func executeEmbedResponse(session DiscordSession, message *discordgo.Message, cf
 }
 
 // executeDMResponse sends a direct message to the user
-func executeDMResponse(session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
+func executeDMResponse(ctx context.Context, session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
+	// Validate author exists
+	if message.Author == nil {
+		return fmt.Errorf("message author is nil, cannot send DM")
+	}
+	if message.Author.ID == "" {
+		return fmt.Errorf("message author ID is empty, cannot send DM")
+	}
+
+	// Check context before API call
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	default:
+	}
+
 	// Create DM channel
 	channel, err := session.UserChannelCreate(message.Author.ID)
 	if err != nil {
 		return fmt.Errorf("failed to create DM channel: %w", err)
+	}
+
+	// Validate content length if sending text
+	if cfg.Content != "" && len(cfg.Content) > MaxMessageLength {
+		return fmt.Errorf("DM content exceeds maximum length of %d characters (got %d)", MaxMessageLength, len(cfg.Content))
 	}
 
 	// Send message to DM channel
@@ -93,9 +164,20 @@ func executeDMResponse(session DiscordSession, message *discordgo.Message, cfg c
 }
 
 // executeReactionResponse adds a reaction to the message
-func executeReactionResponse(session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
+func executeReactionResponse(ctx context.Context, session DiscordSession, message *discordgo.Message, cfg config.ResponseConfig) error {
 	if cfg.Reaction == "" {
 		return fmt.Errorf("reaction response requires non-empty reaction")
+	}
+
+	if message.ID == "" {
+		return fmt.Errorf("message ID is empty, cannot add reaction")
+	}
+
+	// Check context before API call
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	default:
 	}
 
 	err := session.MessageReactionAdd(message.ChannelID, message.ID, cfg.Reaction)

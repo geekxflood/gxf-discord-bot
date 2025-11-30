@@ -38,8 +38,9 @@ type Limiter struct {
 	globalMu     sync.RWMutex
 
 	// Cleanup
-	cleanupStop chan struct{}
-	cleanupMu   sync.Mutex
+	cleanupStop    chan struct{}
+	cleanupStopped chan struct{}
+	cleanupMu      sync.Mutex
 }
 
 type bucket struct {
@@ -300,18 +301,22 @@ func (l *Limiter) StartCleanup(interval time.Duration) error {
 	}
 
 	l.cleanupStop = make(chan struct{})
+	l.cleanupStopped = make(chan struct{})
 	ticker := time.NewTicker(interval)
 
-	// Store local copy of cleanupStop to avoid race
+	// Store local copies to avoid race
 	stopChan := l.cleanupStop
+	stoppedChan := l.cleanupStopped
 
 	go func() {
+		defer close(stoppedChan)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ticker.C:
 				l.Cleanup()
 			case <-stopChan:
-				ticker.Stop()
 				return
 			}
 		}
@@ -325,13 +330,15 @@ func (l *Limiter) StartCleanup(interval time.Duration) error {
 func (l *Limiter) StopCleanup() {
 	l.cleanupMu.Lock()
 	stopChan := l.cleanupStop
+	stoppedChan := l.cleanupStopped
 	l.cleanupStop = nil
+	l.cleanupStopped = nil
 	l.cleanupMu.Unlock()
 
 	if stopChan != nil {
 		close(stopChan)
-		// Give goroutine time to exit
-		time.Sleep(10 * time.Millisecond)
+		// Wait for goroutine to actually exit instead of arbitrary sleep
+		<-stoppedChan
 		l.logger.Info("Rate limit cleanup stopped")
 	}
 }

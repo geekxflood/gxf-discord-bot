@@ -186,18 +186,66 @@ func (s *Scheduler) ListJobs() []JobInfo {
 	return jobs
 }
 
+// ScheduledActionExecutor is a function that executes a scheduled action
+type ScheduledActionExecutor func(ctx context.Context, actionName string, channels []string) error
+
 // LoadFromConfig loads scheduled actions from configuration
-func (s *Scheduler) LoadFromConfig(cfg *config.Config) (int, error) {
+func (s *Scheduler) LoadFromConfig(cfg *config.Config, executor ScheduledActionExecutor) (int, error) {
 	s.logger.Info("Loading scheduled actions from config")
 
 	count := 0
+	var errs []error
+
 	for _, action := range cfg.Actions {
 		if action.Type == "scheduled" && action.Trigger.Schedule != "" {
 			s.logger.Debug("Found scheduled action", "name", action.Name, "schedule", action.Trigger.Schedule)
+
+			// Capture action details for closure
+			actionName := action.Name
+			actionSchedule := action.Trigger.Schedule
+			actionChannels := action.Trigger.Channels
+			actionResponse := action.Response
+
+			// Create job function
+			jobFn := func(ctx context.Context) error {
+				s.logger.Info("Executing scheduled action", "name", actionName)
+
+				if executor != nil {
+					return executor(ctx, actionName, actionChannels)
+				}
+
+				// Default behavior: log that no executor is configured
+				s.logger.Warn("No executor configured for scheduled action",
+					"name", actionName,
+					"response_type", actionResponse.Type,
+					"channels", actionChannels)
+				return nil
+			}
+
+			// Add the job to the scheduler
+			jobID, err := s.AddJob(actionName, actionSchedule, jobFn)
+			if err != nil {
+				s.logger.Error("Failed to schedule action",
+					"name", actionName,
+					"schedule", actionSchedule,
+					"error", err)
+				errs = append(errs, fmt.Errorf("failed to schedule %s: %w", actionName, err))
+				continue
+			}
+
+			s.logger.Info("Scheduled action registered",
+				"name", actionName,
+				"jobID", jobID,
+				"schedule", actionSchedule)
 			count++
 		}
 	}
 
-	s.logger.Info("Scheduled actions loaded", "count", count)
+	s.logger.Info("Scheduled actions loaded", "count", count, "errors", len(errs))
+
+	if len(errs) > 0 {
+		return count, fmt.Errorf("some actions failed to schedule: %d errors", len(errs))
+	}
+
 	return count, nil
 }

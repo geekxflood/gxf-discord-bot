@@ -262,7 +262,7 @@ func TestScheduler_LoadFromConfig(t *testing.T) {
 	sched := scheduler.New(logger)
 
 	// Should be able to load scheduled actions from config
-	count, err := sched.LoadFromConfig(cfg)
+	count, err := sched.LoadFromConfig(cfg, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, count)
 }
